@@ -18,8 +18,23 @@ def search_web(query: str) -> str:
     """Search the web for recent news, analyst opinions, and market commentary.
     Use this for finding current information about a company, industry trends,
     or anything not in SEC filings."""
-    results = tavily_client.search(query, max_results=5)
-    return str(results)
+    results = tavily_client.search(
+        query,
+        max_results=3,
+        search_depth="basic",
+        include_answer=True
+    )
+
+    # Build a clean summary instead of dumping the raw blob
+    output = ""
+    if results.get("answer"):
+        output += f"Summary: {results['answer']}\n\n"
+
+    output += "Sources:\n"
+    for r in results.get("results", []):
+        output += f"- {r['title']}\n  {r['url']}\n  {r['content'][:300]}...\n\n"
+
+    return output
 
 
 @tool
