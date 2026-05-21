@@ -25,7 +25,6 @@ def search_web(query: str) -> str:
         include_answer=True
     )
 
-    # Build a clean summary instead of dumping the raw blob
     output = ""
     if results.get("answer"):
         output += f"Summary: {results['answer']}\n\n"
@@ -39,11 +38,10 @@ def search_web(query: str) -> str:
 
 @tool
 def get_sec_filings(ticker: str, filing_type: str = "10-K") -> str:
-    """Fetch the most recent SEC filing for a given company ticker.
-    Use this to get official financial data, earnings, debt, and risk disclosures.
+    """Fetch the URL of the most recent SEC filing for a given company ticker.
+    Use this to cite official sources in your final answer.
     filing_type can be '10-K' (annual), '10-Q' (quarterly), or '8-K' (current events)."""
 
-    # Step 1: Get the CIK number for the ticker
     ticker_url = "https://www.sec.gov/files/company_tickers.json"
     ticker_data = requests.get(ticker_url, headers=SEC_HEADERS).json()
 
@@ -56,11 +54,9 @@ def get_sec_filings(ticker: str, filing_type: str = "10-K") -> str:
     if not cik:
         return f"Could not find CIK for ticker {ticker}"
 
-    # Step 2: Get the list of filings for that CIK
     filings_url = f"https://data.sec.gov/submissions/CIK{cik}.json"
     filings_data = requests.get(filings_url, headers=SEC_HEADERS).json()
 
-    # Step 3: Find the most recent filing of the requested type
     recent = filings_data["filings"]["recent"]
     for i, form in enumerate(recent["form"]):
         if form == filing_type:
@@ -70,3 +66,93 @@ def get_sec_filings(ticker: str, filing_type: str = "10-K") -> str:
             return f"Found {filing_type} for {ticker}: {filing_url}"
 
     return f"No {filing_type} found for {ticker}"
+
+
+@tool
+def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
+    """Get historical financial data for a company from SEC XBRL filings.
+    Returns the most recent annual values for the requested metric.
+
+    Common metric names:
+    - 'Revenues' for revenue (will also try newer tags automatically)
+    - 'NetIncomeLoss' for net income
+    - 'Assets' for total assets
+    - 'Liabilities' for total liabilities
+    - 'StockholdersEquity' for equity
+    """
+
+    ticker_url = "https://www.sec.gov/files/company_tickers.json"
+    ticker_data = requests.get(ticker_url, headers=SEC_HEADERS).json()
+
+    cik = None
+    for item in ticker_data.values():
+        if item["ticker"] == ticker.upper():
+            cik = str(item["cik_str"]).zfill(10)
+            break
+
+    if not cik:
+        return f"Could not find CIK for ticker {ticker}"
+
+    # If asking for revenue, try multiple known tags
+    if metric.lower() in ["revenue", "revenues"]:
+        metrics_to_try = ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"]
+    else:
+        metrics_to_try = [metric]
+
+    all_annual_values = []
+    used_metric = None
+
+    for m in metrics_to_try:
+        url = f"https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{m}.json"
+        response = requests.get(url, headers=SEC_HEADERS)
+
+        if response.status_code != 200:
+            continue
+
+        data = response.json()
+        if "units" not in data or "USD" not in data["units"]:
+            continue
+
+        # Only true annual values: form is 10-K, fiscal period is FY, AND the duration is ~365 days
+        for item in data["units"]["USD"]:
+            if item.get("form") != "10-K" or item.get("fp") != "FY":
+                continue
+            # Filter for full-year duration by checking start/end dates
+            try:
+                from datetime import datetime
+                end = datetime.fromisoformat(item["end"])
+                # Balance sheet items (Assets, Liabilities) have no "start" or start = end
+                # Income statement items (Revenue, NetIncome) have a period
+                if "start" in item:
+                    start = datetime.fromisoformat(item["start"])
+                    days = (end - start).days
+                    # Accept either a full year (income statement) or a snapshot (balance sheet)
+                    if 0 < days < 350:  # skip quarters
+                        continue
+            except (KeyError, ValueError):
+                continue
+
+            all_annual_values.append(item)
+
+        if all_annual_values:
+            used_metric = m
+            break
+
+    if not all_annual_values:
+        return f"No annual 10-K data found for {metric} on {ticker}"
+
+    # Dedupe by end date, keep latest filed version
+    seen_dates = {}
+    for item in all_annual_values:
+        key = item["end"]
+        if key not in seen_dates or item["filed"] > seen_dates[key]["filed"]:
+            seen_dates[key] = item
+
+    annual_values = sorted(seen_dates.values(), key=lambda x: x["end"], reverse=True)
+
+    output = f"{ticker} - {used_metric} (Annual / 10-K filings):\n"
+    for item in annual_values[:5]:
+        value_billions = item["val"] / 1_000_000_000
+        output += f"  Fiscal year ending {item['end']}: ${value_billions:,.2f}B (filed {item['filed']})\n"
+
+    return output

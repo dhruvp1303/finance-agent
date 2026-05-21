@@ -2,8 +2,7 @@ from langchain_core.messages import HumanMessage
 from src.agent import agent
 
 # Try a question
-question = "What was Apple's revenue in their latest 10-K filing?"
-
+question = "Compare Microsoft and Google's revenue for the last 3 years"
 result = agent.invoke({
     "messages": [HumanMessage(content=question)]
 })

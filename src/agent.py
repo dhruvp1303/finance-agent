@@ -6,7 +6,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 
 from src.state import AgentState
-from src.tools import search_web, get_sec_filings
+from src.tools import search_web, get_sec_filings , get_financial_metric
 
 load_dotenv()
 
@@ -14,21 +14,23 @@ load_dotenv()
 llm = ChatAnthropic(model="claude-sonnet-4-5")
 
 # Tell the LLM about the tools
-tools = [search_web, get_sec_filings]
+tools = [search_web, get_sec_filings, get_financial_metric]
 llm_with_tools = llm.bind_tools(tools)
 
 
 SYSTEM_PROMPT = """You are a financial research assistant.
 
-You have access to two tools:
+You have access to three tools:
 - search_web: for recent news, analyst commentary, market updates
-- get_sec_filings: for official SEC filings (10-K, 10-Q, 8-K)
+- get_sec_filings: returns the URL of an official SEC filing (for citation purposes)
+- get_financial_metric: returns precise financial numbers from SEC XBRL data. PREFER this for any specific dollar figures like revenue, net income, etc.
 
 Rules:
 1. Always use tools to get real data. Never invent financial figures.
-2. If a tool returns only a URL without content, tell the user to visit the link rather than fabricating numbers.
-3. Cite your sources by including URLs in your final answer.
-4. Be concise and factual."""
+2. For specific financial numbers, ALWAYS use get_financial_metric first.
+3. Use get_sec_filings to grab the filing URL for citation.
+4. Cite your sources by including URLs in your final answer.
+5. Be concise and factual."""
 
 
 # Node 1: The agent brain
