@@ -3,6 +3,7 @@ import requests
 from langchain_core.tools import tool
 from tavily import TavilyClient
 from dotenv import load_dotenv
+from src.memory import add_to_memory
 
 load_dotenv()
 
@@ -156,3 +157,14 @@ def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
         output += f"  Fiscal year ending {item['end']}: ${value_billions:,.2f}B (filed {item['filed']})\n"
 
     return output
+
+
+from src.memory import search_memory, add_to_memory
+
+
+@tool
+def recall_from_memory(query: str) -> str:
+    """Search past findings stored in memory. Use this BEFORE calling other tools
+    to check if relevant information has already been gathered in this session.
+    Useful for avoiding duplicate API calls."""
+    return search_memory(query)
