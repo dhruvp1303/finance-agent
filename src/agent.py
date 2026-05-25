@@ -6,7 +6,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 
 from src.state import AgentState
-from src.tools import search_web, get_sec_filings , get_financial_metric
+from src.tools import search_web , get_financial_metric
 
 load_dotenv()
 
@@ -14,7 +14,7 @@ load_dotenv()
 llm = ChatAnthropic(model="claude-sonnet-4-5")
 
 # Tell the LLM about the tools
-tools = [search_web, get_sec_filings, get_financial_metric]
+tools = [search_web, get_financial_metric]
 llm_with_tools = llm.bind_tools(tools)
 
 
@@ -22,7 +22,6 @@ SYSTEM_PROMPT = """You are a financial research assistant.
 
 You have access to three tools:
 - search_web: for recent news, analyst commentary, market updates
-- get_sec_filings: returns the URL of an official SEC filing (for citation purposes)
 - get_financial_metric: returns precise financial numbers from SEC XBRL data. PREFER this for any specific dollar figures like revenue, net income, etc.
 
 Rules:

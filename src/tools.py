@@ -34,39 +34,17 @@ def search_web(query: str) -> str:
     for r in results.get("results", []):
         output += f"- {r['title']}\n  {r['url']}\n  {r['content'][:300]}...\n\n"
 
+    # Store in memory for future recall
+    add_to_memory(
+        text=output,
+        source="web_search",
+        metadata={"query": query}
+    )
+
     return output
 
 
-@tool
-def get_sec_filings(ticker: str, filing_type: str = "10-K") -> str:
-    """Fetch the URL of the most recent SEC filing for a given company ticker.
-    Use this to cite official sources in your final answer.
-    filing_type can be '10-K' (annual), '10-Q' (quarterly), or '8-K' (current events)."""
 
-    ticker_url = "https://www.sec.gov/files/company_tickers.json"
-    ticker_data = requests.get(ticker_url, headers=SEC_HEADERS).json()
-
-    cik = None
-    for item in ticker_data.values():
-        if item["ticker"] == ticker.upper():
-            cik = str(item["cik_str"]).zfill(10)
-            break
-
-    if not cik:
-        return f"Could not find CIK for ticker {ticker}"
-
-    filings_url = f"https://data.sec.gov/submissions/CIK{cik}.json"
-    filings_data = requests.get(filings_url, headers=SEC_HEADERS).json()
-
-    recent = filings_data["filings"]["recent"]
-    for i, form in enumerate(recent["form"]):
-        if form == filing_type:
-            accession = recent["accessionNumber"][i].replace("-", "")
-            primary_doc = recent["primaryDocument"][i]
-            filing_url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession}/{primary_doc}"
-            return f"Found {filing_type} for {ticker}: {filing_url}"
-
-    return f"No {filing_type} found for {ticker}"
 
 
 @tool
@@ -156,6 +134,16 @@ def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
         value_billions = item["val"] / 1_000_000_000
         output += f"  Fiscal year ending {item['end']}: ${value_billions:,.2f}B (filed {item['filed']})\n"
 
+    # Store in memory
+    add_to_memory(
+        text=output,
+        source="sec_xbrl",
+        metadata={"ticker": ticker, "metric": used_metric}
+    )
+
+    return output
+    
+    
     return output
 
 
