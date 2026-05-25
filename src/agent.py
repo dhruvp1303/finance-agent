@@ -6,7 +6,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 
 from src.state import AgentState
-from src.tools import search_web , get_financial_metric
+from src.tools import search_web , get_financial_metric, recall_from_memory
 
 load_dotenv()
 
@@ -14,7 +14,7 @@ load_dotenv()
 llm = ChatAnthropic(model="claude-sonnet-4-5")
 
 # Tell the LLM about the tools
-tools = [search_web, get_financial_metric]
+tools = [search_web, get_financial_metric,recall_from_memory]
 llm_with_tools = llm.bind_tools(tools)
 
 
