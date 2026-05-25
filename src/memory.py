@@ -58,7 +58,7 @@ def search_memory(query: str, n_results: int = 3) -> str:
         output += f"[{i+1}] Source: {meta.get('source', 'unknown')}\n"
         if "ticker" in meta:
             output += f"    Ticker: {meta['ticker']}\n"
-        output += f"    Content: {doc[:300]}...\n\n"
+        output += f"    Content: {doc[:1500]}...\n\n"
 
     return output
 

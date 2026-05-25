@@ -1,22 +1,28 @@
 from langchain_core.messages import HumanMessage
 from src.agent import agent
 
-# First question
 print("=" * 60)
 print("FIRST QUERY")
 print("=" * 60)
-question1 = "What was Tesla's revenue last year?"
 result1 = agent.invoke({
-    "messages": [HumanMessage(content=question1)]
+    "messages": [HumanMessage(content="What was Tesla's revenue last year?")]
 })
-print(result1["messages"][-1].content)
+for msg in result1["messages"]:
+    print(f"\n[{type(msg).__name__}]")
+    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+        print(f"Tool calls: {[t['name'] for t in msg.tool_calls]}")
+    if hasattr(msg, 'content'):
+        print(str(msg.content)[:500])
 
-# Second question, related
 print("\n" + "=" * 60)
-print("SECOND QUERY (should use memory)")
+print("SECOND QUERY")
 print("=" * 60)
-question2 = "Remind me what Tesla's revenue was?"
 result2 = agent.invoke({
-    "messages": [HumanMessage(content=question2)]
+    "messages": [HumanMessage(content="Remind me what Tesla's revenue was?")]
 })
-print(result2["messages"][-1].content)
+for msg in result2["messages"]:
+    print(f"\n[{type(msg).__name__}]")
+    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+        print(f"Tool calls: {[t['name'] for t in msg.tool_calls]}")
+    if hasattr(msg, 'content'):
+        print(str(msg.content)[:500])
