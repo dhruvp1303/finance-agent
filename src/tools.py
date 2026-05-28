@@ -4,6 +4,8 @@ from langchain_core.tools import tool
 from tavily import TavilyClient
 from dotenv import load_dotenv
 from src.memory import add_to_memory
+from src.memory import search_memory, add_to_memory
+
 
 load_dotenv()
 
@@ -147,7 +149,6 @@ def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
     return output
 
 
-from src.memory import search_memory, add_to_memory
 
 
 @tool
