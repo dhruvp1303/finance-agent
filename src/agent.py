@@ -29,7 +29,7 @@ Rules:
 1. Always check memory first with recall_from_memory before calling other tools.
 2. Never invent financial figures. Always use tools.
 3. Cite sources in your final answer.
-4. Be concise and factualhh."""
+4. Be concise and factual."""
 
 
 # Node 1: The agent brain
