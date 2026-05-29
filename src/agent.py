@@ -59,32 +59,24 @@ Always check memory first. Use exact figures from filings. Never invent numbers.
 
 # region Agents
 def orchestrator_node(state: AgentState):
-    messages = state["messages"]
-
-    # Prepend orchestrator's system prompt
-    orchestrator_messages = [SystemMessage(content=ORCHESTRATOR_PROMPT)] + messages
-    # Call LLM (no tools, just a classification)
-    response = llm.invoke(orchestrator_messages)
-    # The response content is "research" or "financial"
+    messages = [SystemMessage(content=ORCHESTRATOR_PROMPT)] + state["messages"]
+    response = llm.invoke(messages)
     specialist = response.content.strip().lower()
-    # Store in state so the router can read it
     return {"current_step": specialist, "messages": [response]}
 
 
-
-
 def research_agent_node(state: AgentState):
-    messages = state["messages"]
-    if not any(isinstance(m, SystemMessage) for m in messages):
-        messages = [SystemMessage(content=RESEARCH_PROMPT)] + messages
+    # Strip any old SystemMessages, use only our prompt
+    non_system = [m for m in state["messages"] if not isinstance(m, SystemMessage)]
+    messages = [SystemMessage(content=RESEARCH_PROMPT)] + non_system
     response = research_llm.invoke(messages)
     return {"messages": [response]}
 
 
 def financial_agent_node(state: AgentState):
-    messages = state["messages"]
-    if not any(isinstance(m, SystemMessage) for m in messages):
-        messages = [SystemMessage(content=FINANCIAL_PROMPT)] + messages
+    # Strip any old SystemMessages, use only our prompt
+    non_system = [m for m in state["messages"] if not isinstance(m, SystemMessage)]
+    messages = [SystemMessage(content=FINANCIAL_PROMPT)] + non_system
     response = financial_llm.invoke(messages)
     return {"messages": [response]}
 # endregion
