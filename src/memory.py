@@ -38,19 +38,27 @@ def add_to_memory(text: str, source: str, metadata: dict = None) -> str:
     return f"Stored in memory: {doc_id}"
 
 
-def search_memory(query: str, n_results: int = 3) -> str:
+def search_memory(query: str, n_results: int = 3, ticker: str = None) -> str:
     """Search memory for relevant past findings.
 
     query: what to search for in plain English
     n_results: how many matches to return
+    ticker: optional ticker filter to only return relevant memories
     """
     if collection.count() == 0:
         return "Memory is empty. No past findings to recall."
 
+    # Build the filter if ticker provided
+    where_filter = {"ticker": ticker} if ticker else None
+
     results = collection.query(
         query_texts=[query],
-        n_results=min(n_results, collection.count())
+        n_results=min(n_results, collection.count()),
+        where=where_filter
     )
+
+    if not results["documents"] or not results["documents"][0]:
+        return f"No relevant memories found for {ticker or query}."
 
     output = f"Found {len(results['documents'][0])} relevant memories:\n\n"
     for i, doc in enumerate(results["documents"][0]):

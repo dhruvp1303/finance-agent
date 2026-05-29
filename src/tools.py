@@ -152,8 +152,12 @@ def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
 
 
 @tool
-def recall_from_memory(query: str) -> str:
+@tool
+def recall_from_memory(query: str, ticker: str = None) -> str:
     """Search past findings stored in memory. Use this BEFORE calling other tools
     to check if relevant information has already been gathered in this session.
-    Useful for avoiding duplicate API calls."""
-    return search_memory(query)
+
+    query: what you're looking for
+    ticker: optional, pass the ticker symbol to narrow results to that company only
+    """
+    return search_memory(query, ticker=ticker)
