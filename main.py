@@ -5,7 +5,7 @@ print("=" * 60)
 print("FIRST QUERY")
 print("=" * 60)
 result1 = agent.invoke({
-    "messages": [HumanMessage(content="What was Tesla's revenue last year?")]
+    "messages": [HumanMessage(content="What's the latest news about Nvidia's CEO?")]
 })
 for msg in result1["messages"]:
     print(f"\n[{type(msg).__name__}]")
