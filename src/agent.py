@@ -43,6 +43,9 @@ You have two tools:
 - recall_from_memory: Check past findings first
 - search_web: Find recent news and market info
 
+IMPORTANT: Call tools ONE AT A TIME, not in parallel. First call recall_from_memory and WAIT for the result. Only if memory is empty or insufficient, then call search_web in a SEPARATE turn.
+
+
 Always check memory first. Cite sources. Be concise and factual."""
 
 #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -51,6 +54,8 @@ FINANCIAL_PROMPT = """You are a financial data specialist focused on SEC filings
 You have two tools:
 - recall_from_memory: Check past findings first
 - get_financial_metric: Get precise financial numbers from SEC XBRL data
+
+IMPORTANT: Call tools ONE AT A TIME, not in parallel. First call recall_from_memory and WAIT for the result. Only if memory is empty or insufficient, then call get_financial_metric in a SEPARATE turn.
 
 Always check memory first. Use exact figures from filings. Never invent numbers."""
 
