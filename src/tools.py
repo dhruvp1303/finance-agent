@@ -151,7 +151,7 @@ def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
 
 
 
-@tool
+
 @tool
 def recall_from_memory(query: str, ticker: str = None) -> str:
     """Search past findings stored in memory. Use this BEFORE calling other tools
