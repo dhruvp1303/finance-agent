@@ -37,17 +37,16 @@ function App() {
     if (e.key === 'Enter') handleSubmit()
   }
 
-  // Color per agent
   const agentColor = (agent) => {
     const colors = {
-      'Orchestrator': '#9b7fe8',
-      'Research Agent': '#4a9eff',
-      'Financial Agent': '#2ecc8a',
-      'Research Tool': '#4a9eff',
-      'Financial Tool': '#2ecc8a',
+      'Orchestrator': '#6c5ce7',
+      'Research Agent': '#0ea5e9',
+      'Financial Agent': '#10b981',
+      'Research Tool': '#0ea5e9',
+      'Financial Tool': '#10b981',
       'System': '#7a8394',
     }
-    return colors[agent] || '#c8cdd8'
+    return colors[agent] || '#1a1d29'
   }
 
   const finalAnswer = messages.find((m) => m.type === 'final_answer')
@@ -55,13 +54,12 @@ function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="logo">ARBOR<span>.</span>RESEARCH</div>
-        <div className="status">
-          {isRunning ? (
-            <><span className="dot live"></span>RUNNING</>
-          ) : (
-            <><span className="dot idle"></span>IDLE</>
-          )}
+        <div className="logo">
+          <span className="logo-mark">◆</span>
+          <span className="logo-text">Multi-Agent Investment Analyst</span>
+        </div>
+        <div className={`status ${isRunning ? 'running' : ''}`}>
+          {isRunning ? 'RUNNING' : 'IDLE'}
         </div>
       </header>
 
@@ -82,16 +80,13 @@ function App() {
 
       <div className="main">
         <section className="feed-panel">
-          <div className="panel-header">
-            <span className="live-dot"></span>
-            REASONING TRACE
-          </div>
+          <div className="panel-header">REASONING TRACE</div>
           <div className="feed">
             {messages.length === 0 && (
               <div className="empty">No activity. Submit a query to begin.</div>
             )}
             {messages.map((msg, i) => (
-              <div key={i} className="feed-entry" style={{ borderLeftColor: agentColor(msg.agent) }}>
+              <div key={i} className="feed-entry">
                 <div className="agent-label" style={{ color: agentColor(msg.agent) }}>
                   {msg.agent}
                 </div>

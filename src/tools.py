@@ -49,17 +49,22 @@ def search_web(query: str) -> str:
 
 
 
+
 @tool
-def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
+def get_financial_metric(ticker: str, metric: str = "Revenues", period: str = "FY") -> str:
     """Get historical financial data for a company from SEC XBRL filings.
-    Returns the most recent annual values for the requested metric.
+
+    period options:
+    - 'FY' = annual data (from 10-K filings)
+    - 'Q1', 'Q2', 'Q3', 'Q4' = quarterly data (from 10-Q filings)
 
     Common metric names:
-    - 'Revenues' for revenue (will also try newer tags automatically)
+    - 'Revenues' or 'RevenueFromContractWithCustomerExcludingAssessedTax' for revenue
     - 'NetIncomeLoss' for net income
     - 'Assets' for total assets
     - 'Liabilities' for total liabilities
     - 'StockholdersEquity' for equity
+    - 'CashAndCashEquivalentsAtCarryingValue' for cash
     """
 
     ticker_url = "https://www.sec.gov/files/company_tickers.json"
@@ -74,14 +79,17 @@ def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
     if not cik:
         return f"Could not find CIK for ticker {ticker}"
 
-    # If asking for revenue, try multiple known tags
     if metric.lower() in ["revenue", "revenues"]:
         metrics_to_try = ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"]
     else:
         metrics_to_try = [metric]
 
-    all_annual_values = []
+    all_values = []
     used_metric = None
+
+    # Determine which filing type to search based on period
+    is_annual = period.upper() == "FY"
+    form_type = "10-K" if is_annual else "10-Q"
 
     for m in metrics_to_try:
         url = f"https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{m}.json"
@@ -94,53 +102,53 @@ def get_financial_metric(ticker: str, metric: str = "Revenues") -> str:
         if "units" not in data or "USD" not in data["units"]:
             continue
 
-        # Only true annual values: form is 10-K, fiscal period is FY, AND the duration is ~365 days
         for item in data["units"]["USD"]:
-            if item.get("form") != "10-K" or item.get("fp") != "FY":
+            if item.get("form") != form_type:
                 continue
-            # Filter for full-year duration by checking start/end dates
+            if item.get("fp") != period.upper():
+                continue
+
             try:
                 from datetime import datetime
                 end = datetime.fromisoformat(item["end"])
-                # Balance sheet items (Assets, Liabilities) have no "start" or start = end
-                # Income statement items (Revenue, NetIncome) have a period
                 if "start" in item:
                     start = datetime.fromisoformat(item["start"])
                     days = (end - start).days
-                    # Accept either a full year (income statement) or a snapshot (balance sheet)
-                    if 0 < days < 350:  # skip quarters
+                    # Annual: ~365 days, Quarterly: ~90 days
+                    if is_annual and 0 < days < 350:
+                        continue
+                    if not is_annual and (days < 60 or days > 120):
                         continue
             except (KeyError, ValueError):
                 continue
 
-            all_annual_values.append(item)
+            all_values.append(item)
 
-        if all_annual_values:
+        if all_values:
             used_metric = m
             break
 
-    if not all_annual_values:
-        return f"No annual 10-K data found for {metric} on {ticker}"
+    if not all_values:
+        return f"No {period} data found for {metric} on {ticker}"
 
-    # Dedupe by end date, keep latest filed version
     seen_dates = {}
-    for item in all_annual_values:
+    for item in all_values:
         key = item["end"]
         if key not in seen_dates or item["filed"] > seen_dates[key]["filed"]:
             seen_dates[key] = item
 
-    annual_values = sorted(seen_dates.values(), key=lambda x: x["end"], reverse=True)
+    sorted_values = sorted(seen_dates.values(), key=lambda x: x["end"], reverse=True)
 
-    output = f"{ticker} - {used_metric} (Annual / 10-K filings):\n"
-    for item in annual_values[:5]:
+    output = f"{ticker} - {used_metric} ({period} / {form_type} filings):\n"
+    for item in sorted_values[:5]:
         value_billions = item["val"] / 1_000_000_000
-        output += f"  Fiscal year ending {item['end']}: ${value_billions:,.2f}B (filed {item['filed']})\n"
+        output += f"  Period ending {item['end']}: ${value_billions:,.2f}B (filed {item['filed']})\n"
 
     # Store in memory
     add_to_memory(
         text=output,
         source="sec_xbrl",
-        metadata={"ticker": ticker, "metric": used_metric}
+        metadata={"ticker": ticker, "metric": used_metric, "period": period}
     )
 
     return output
