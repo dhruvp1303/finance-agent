@@ -49,13 +49,60 @@ function App() {
     return colors[agent] || '#1a1d29'
   }
 
+  const AgentIcon = ({ agent }) => {
+    const color = agentColor(agent)
+    const iconStyle = { width: 14, height: 14, color }
+
+    if (agent === 'Orchestrator') {
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <circle cx="5" cy="6" r="2"/>
+          <circle cx="19" cy="6" r="2"/>
+          <circle cx="5" cy="18" r="2"/>
+          <circle cx="19" cy="18" r="2"/>
+        </svg>
+      )
+    }
+    if (agent === 'Research Agent') {
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      )
+    }
+    if (agent === 'Financial Agent') {
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      )
+    }
+    if (agent === 'Research Tool' || agent === 'Financial Tool') {
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      )
+    }
+    // System
+    return (
+      <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+    )
+  }
+
   const finalAnswer = messages.find((m) => m.type === 'final_answer')
 
   return (
     <div className="app">
       <header className="topbar">
         <div className="logo">
-          <span className="logo-mark">◆</span>
           <span className="logo-text">Multi-Agent Investment Analyst</span>
         </div>
         <div className={`status ${isRunning ? 'running' : ''}`}>
@@ -88,7 +135,8 @@ function App() {
             {messages.map((msg, i) => (
               <div key={i} className="feed-entry">
                 <div className="agent-label" style={{ color: agentColor(msg.agent) }}>
-                  {msg.agent}
+                  <AgentIcon agent={msg.agent} />
+                  <span>{msg.agent}</span>
                 </div>
                 <div className="message-text">{msg.message}</div>
               </div>
