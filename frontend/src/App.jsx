@@ -33,35 +33,84 @@ function App() {
     }
   }
 
-  return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px', fontFamily: 'monospace' }}>
-      <h1>Multi-Agent Investment Analyst</h1>
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSubmit()
+  }
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+  // Color per agent
+  const agentColor = (agent) => {
+    const colors = {
+      'Orchestrator': '#9b7fe8',
+      'Research Agent': '#4a9eff',
+      'Financial Agent': '#2ecc8a',
+      'Research Tool': '#4a9eff',
+      'Financial Tool': '#2ecc8a',
+      'System': '#7a8394',
+    }
+    return colors[agent] || '#c8cdd8'
+  }
+
+  const finalAnswer = messages.find((m) => m.type === 'final_answer')
+
+  return (
+    <div className="app">
+      <header className="topbar">
+        <div className="logo">ARBOR<span>.</span>RESEARCH</div>
+        <div className="status">
+          {isRunning ? (
+            <><span className="dot live"></span>RUNNING</>
+          ) : (
+            <><span className="dot idle"></span>IDLE</>
+          )}
+        </div>
+      </header>
+
+      <div className="input-row">
+        <span className="prompt">›</span>
         <input
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask a financial question..."
-          style={{ flex: 1, padding: '8px', fontSize: '14px' }}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask a financial research question..."
           disabled={isRunning}
         />
-        <button
-          onClick={handleSubmit}
-          disabled={isRunning || !question}
-          style={{ padding: '8px 20px' }}
-        >
-          {isRunning ? 'Running...' : 'Run'}
+        <button onClick={handleSubmit} disabled={isRunning || !question}>
+          {isRunning ? 'RUNNING' : 'RUN'}
         </button>
       </div>
 
-      <div style={{ border: '1px solid #ddd', padding: '12px', minHeight: '300px', borderRadius: '4px' }}>
-        {messages.length === 0 && <p style={{ color: '#888' }}>No messages yet. Ask a question to begin.</p>}
-        {messages.map((msg, i) => (
-          <div key={i} style={{ marginBottom: '8px', fontSize: '13px' }}>
-            <strong>[{msg.agent}]</strong> {msg.message}
+      <div className="main">
+        <section className="feed-panel">
+          <div className="panel-header">
+            <span className="live-dot"></span>
+            REASONING TRACE
           </div>
-        ))}
+          <div className="feed">
+            {messages.length === 0 && (
+              <div className="empty">No activity. Submit a query to begin.</div>
+            )}
+            {messages.map((msg, i) => (
+              <div key={i} className="feed-entry" style={{ borderLeftColor: agentColor(msg.agent) }}>
+                <div className="agent-label" style={{ color: agentColor(msg.agent) }}>
+                  {msg.agent}
+                </div>
+                <div className="message-text">{msg.message}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="answer-panel">
+          <div className="panel-header">ANSWER</div>
+          <div className="answer">
+            {finalAnswer ? (
+              <div className="answer-text">{finalAnswer.message}</div>
+            ) : (
+              <div className="empty">Waiting for response...</div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   )
