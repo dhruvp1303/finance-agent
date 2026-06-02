@@ -12,8 +12,7 @@ function App() {
     setMessages([])
     setIsRunning(true)
 
-    const ws = new WebSocket("ws://127.0.0.1:8000/ws/research")
-
+const ws = new WebSocket("ws://18.118.132.229:8001/ws/research")
     ws.onopen = () => {
       ws.send(JSON.stringify({ question }))
     }
