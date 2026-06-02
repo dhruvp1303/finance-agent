@@ -12,7 +12,7 @@ function App() {
     setMessages([])
     setIsRunning(true)
 
-const ws = new WebSocket("ws://18.118.132.229:8001/ws/research")
+  const ws = new WebSocket("wss://agent.18.118.132.229.nip.io/ws/research")
     ws.onopen = () => {
       ws.send(JSON.stringify({ question }))
     }
