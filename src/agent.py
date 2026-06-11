@@ -10,23 +10,18 @@ from src.tools import search_web , get_financial_metric, recall_from_memory
 
 load_dotenv()
 
-# The LLM
 llm = ChatAnthropic(model="claude-sonnet-4-5")
 
-# Make 2 different LLM's, since each specialist would only see the tools for it, not the other tools
 
-#This is the research LLM with its tools 
 research_tools = [search_web,recall_from_memory]
 research_llm = llm.bind_tools(research_tools)
 
-#This is the financial LLM with its tools
 financial_tools = [get_financial_metric, recall_from_memory]
 financial_llm = llm.bind_tools(financial_tools)
 
 
 
 
-# region LLM Promts
 ORCHESTRATOR_PROMPT = """You are a routing orchestrator for a financial research system.
 
 Read the user's question and decide which specialist should handle it:

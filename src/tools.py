@@ -36,7 +36,7 @@ def search_web(query: str) -> str:
     for r in results.get("results", []):
         output += f"- {r['title']}\n  {r['url']}\n  {r['content'][:300]}...\n\n"
 
-    # Store in memory for future recall
+    
     add_to_memory(
         text=output,
         source="web_search",
@@ -87,7 +87,7 @@ def get_financial_metric(ticker: str, metric: str = "Revenues", period: str = "F
     all_values = []
     used_metric = None
 
-    # Determine which filing type to search based on period
+    # which filing type to look for based on period
     is_annual = period.upper() == "FY"
     form_type = "10-K" if is_annual else "10-Q"
 
@@ -144,7 +144,6 @@ def get_financial_metric(ticker: str, metric: str = "Revenues", period: str = "F
         value_billions = item["val"] / 1_000_000_000
         output += f"  Period ending {item['end']}: ${value_billions:,.2f}B (filed {item['filed']})\n"
 
-    # Store in memory
     add_to_memory(
         text=output,
         source="sec_xbrl",

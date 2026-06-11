@@ -1,13 +1,11 @@
 import chromadb
 from chromadb.config import Settings
 
-# Create a persistent client that saves to disk
 client = chromadb.PersistentClient(
     path="./chroma_db",
     settings=Settings(anonymized_telemetry=False)
 )
 
-# Get or create a collection (like a table in a database)
 collection = client.get_or_create_collection(
     name="agent_memory",
     metadata={"description": "Stores findings from agent tool calls"}

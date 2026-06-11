@@ -6,12 +6,10 @@ from src.agent import agent
 app = FastAPI(title="Multi-Agent Investment Analyst")
 
 
-# Request body schema - what the client must send
 class ResearchRequest(BaseModel):
     question: str
 
 
-# Response schema - what we send back
 class ResearchResponse(BaseModel):
     answer: str
 
@@ -28,7 +26,6 @@ async def research(request: ResearchRequest):
         "messages": [HumanMessage(content=request.question)]
     })
 
-    # Last message is the final answer
     final_answer = result["messages"][-1].content
 
     return ResearchResponse(answer=final_answer)
@@ -41,7 +38,6 @@ async def research_ws(websocket: WebSocket):
     """Stream agent reasoning live over WebSocket."""
     await websocket.accept()
 
-    # Map internal node names to user-friendly labels
     NODE_LABELS = {
         "orchestrator": "Orchestrator",
         "research_agent": "Research Agent",
@@ -79,9 +75,7 @@ async def research_ws(websocket: WebSocket):
                 last_msg = messages[-1]
                 msg_type = type(last_msg).__name__
 
-                # Format based on what happened
                 if msg_type == "ToolMessage":
-                    # A tool just ran
                     await websocket.send_json({
                         "type": "tool_result",
                         "agent": label,
@@ -96,10 +90,8 @@ async def research_ws(websocket: WebSocket):
                         "message": f"Calling {', '.join(tool_names)}"
                     })
                 else:
-                    # Agent gave text output
                     content = last_msg.content if isinstance(last_msg.content, str) else str(last_msg.content)
 
-                    # Orchestrator's "financial" or "research" is a routing decision
                     if node_name == "orchestrator":
                         await websocket.send_json({
                             "type": "routing",
@@ -107,7 +99,6 @@ async def research_ws(websocket: WebSocket):
                             "message": f"Routing to {content} specialist"
                         })
                     else:
-                        # This is the final answer from a specialist
                         await websocket.send_json({
                             "type": "final_answer",
                             "agent": label,
